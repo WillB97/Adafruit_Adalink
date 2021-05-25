@@ -55,7 +55,10 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     if 'func' in args:
-        args.func(args)
+        try:
+            args.func(args)
+        except AdaLinkError as e:
+            print(e)
     else:
         parser.print_help()
 
