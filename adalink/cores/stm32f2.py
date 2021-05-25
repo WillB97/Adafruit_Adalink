@@ -3,8 +3,6 @@
 # Author: Kevin Townsend
 import os
 
-import click
-
 from ..core import Core
 from ..programmers import JLink, STLink
 
@@ -81,13 +79,13 @@ class STM32F2(Core):
         # [0xE0042000] = CHIP_REVISION[31:16] + RESERVED[15:12] + DEVICE_ID[11:0]
         deviceid = programmer.readmem32(0xE0042000) & 0xFFF
         chiprev  = (programmer.readmem32(0xE0042000) & 0xFFFF0000) >> 16
-        click.echo('Device ID : {0}'.format(DEVICEID_CHIPNAME_LOOKUP.get(deviceid,
+        print('Device ID : {0}'.format(DEVICEID_CHIPNAME_LOOKUP.get(deviceid,
                                                    '0x{0:03X}'.format(deviceid))))
-        click.echo('Chip Rev  : {0}'.format(DEVICEID_CHIPREV_LOOKUP.get(chiprev,
+        print('Chip Rev  : {0}'.format(DEVICEID_CHIPREV_LOOKUP.get(chiprev,
                                                    '0x{0:04X}'.format(chiprev))))
         # Try to detect the Segger Device ID string and print it if using JLink
         if isinstance(programmer, JLink):
             hwid = programmer.readmem32(0xE0042000) & 0xFFF
             hwstring = DEVICEID_SEGGER_LOOKUP.get(hwid, '0x{0:03X}'.format(hwid))
             if '0x' not in hwstring:
-                click.echo('Segger ID : {0}'.format(hwstring))
+                print('Segger ID : {0}'.format(hwstring))

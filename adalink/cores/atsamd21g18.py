@@ -5,8 +5,6 @@
 # Author: Tony DiCola
 import os
 
-import click
-
 from ..core import Core
 from ..errors import AdaLinkError
 from ..programmers import JLink, STLink, RasPi2
@@ -34,7 +32,7 @@ class STLink_ATSAMD21G18(STLink):
 
     def program(self, hex_files=[], bin_files=[]):
         # Program the ATSAMD21G18 with the provided hex/bin files.
-        click.echo('WARNING: Make sure the provided hex/bin files are padded with ' \
+        print('WARNING: Make sure the provided hex/bin files are padded with ' \
             'at least 64 bytes of blank (0xFF) data!  This will work around a cache bug with OpenOCD 0.9.0.')
         commands = [
             'init',
@@ -90,7 +88,7 @@ class RasPi2_ATSAMD21G18(RasPi2):
 
     def program(self, hex_files=[], bin_files=[]):
         # Program the ATSAMD21G18 with the provided hex/bin files.
-        click.echo('WARNING: Make sure the provided hex/bin files are padded with ' \
+        print('WARNING: Make sure the provided hex/bin files are padded with ' \
             'at least 64 bytes of blank (0xFF) data!  This will work around a cache bug with OpenOCD 0.9.0.')
         commands = [
             'init',
@@ -151,4 +149,4 @@ class ATSAMD21G18(Core):
 
     def info(self, programmer):
         """Display info about the device."""
-        click.echo('Not implemented!')
+        print('Not implemented!')

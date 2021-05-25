@@ -3,8 +3,6 @@
 # Author: Kevin Townsend
 import os
 
-import click
-
 from ..core import Core
 from ..programmers import JLink
 
@@ -104,35 +102,35 @@ class nRF52840(Core):
         # Note for completeness there are also readmem32 and readmem8 functions
         # available to use for reading memory values too.
         hwid = programmer.readmem32(0x10000100)
-        click.echo('Hardware ID : 0x{0:05X}'.format(hwid))
+        print('Hardware ID : 0x{0:05X}'.format(hwid))
         # Get the chip variant
         variant = programmer.readmem32(0x10000104)
-        click.echo('Variant     : {0}'.format(MCU_LOOKUP.get(variant, '0x{0:05X}'.format(variant))))
+        print('Variant     : {0}'.format(MCU_LOOKUP.get(variant, '0x{0:05X}'.format(variant))))
         # Get the Package ID
         package = programmer.readmem16(0x10000108)
         pkgstring = PACKAGE_LOOKUP.get(package, '0x{0:04X}'.format(package))
         if '0x' not in pkgstring:
-            click.echo('Package     : {0}'.format(pkgstring))
+            print('Package     : {0}'.format(pkgstring))
         else:
-            click.echo('Package     : 0x{0:04X}'.format(package))
+            print('Package     : 0x{0:04X}'.format(package))
         # Get the SRAM
         sram = programmer.readmem16(0x1000010C)
         sramstring = SRAM_LOOKUP.get(sram, '0x{0:02X}'.format(package))
         if '0x' not in sramstring:
-            click.echo('SRAM        : {0}'.format(sramstring))
+            print('SRAM        : {0}'.format(sramstring))
         else:
-            click.echo('SRAM        : 0x{0:02X}'.format(sram))
+            print('SRAM        : 0x{0:02X}'.format(sram))
         # Get the Flash size
         flash = programmer.readmem16(0x10000110)
         flashstring = FLASH_LOOKUP.get(flash, '0x{0:04X}'.format(package))
         if '0x' not in flashstring:
-            click.echo('Flash       : {0}'.format(flashstring))
+            print('Flash       : {0}'.format(flashstring))
         else:
-            click.echo('Flash       : 0x{0:04X}'.format(flash))
+            print('Flash       : 0x{0:04X}'.format(flash))
         # Get the BLE Address and print it.
         addr_high = (programmer.readmem32(0x100000a8) & 0x0000ffff) | 0x0000c000
         addr_low  = programmer.readmem32(0x100000a4)
-        click.echo('Device Addr : {0:02X}:{1:02X}:{2:02X}:{3:02X}:{4:02X}:{' \
+        print('Device Addr : {0:02X}:{1:02X}:{2:02X}:{3:02X}:{4:02X}:{' \
                    '5:02X}'.format((addr_high >> 8) & 0xFF,
                                    (addr_high) & 0xFF,
                                    (addr_low >> 24) & 0xFF,
@@ -142,10 +140,10 @@ class nRF52840(Core):
         # Get device ID.
         did_high = programmer.readmem32(0x10000060)
         did_low  = programmer.readmem32(0x10000064)
-        click.echo('Device ID   : {0:08X}{1:08X}'.format(did_high, did_low))
+        print('Device ID   : {0:08X}{1:08X}'.format(did_high, did_low))
         # Check the UICR NFCPINS register to determine NFC pin status
         nfcpins = programmer.readmem32(0x1000120C)
         if nfcpins == 0xFFFFFFFF:
-            click.echo('NFC Pins    : NFC')
+            print('NFC Pins    : NFC')
         else:
-            click.echo('NFC Pins    : GPIO')
+            print('NFC Pins    : GPIO')

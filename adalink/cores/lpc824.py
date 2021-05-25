@@ -1,8 +1,6 @@
 # LPC824 core implementation
 #
 # Author: Kevin Townsend
-import click
-
 from ..core import Core
 from ..programmers import JLink, STLink
 
@@ -44,7 +42,7 @@ DEVICEID_SEGGER_LOOKUP = {
 class LPC824(Core):
     """NXP LPC824 CPU."""
     # Note that the docstring will be used as the short help description.
-    
+
     def __init__(self):
         # Call base class constructor.
         super(LPC824, self).__init__()
@@ -52,7 +50,7 @@ class LPC824(Core):
     def list_programmers(self):
         """Return a list of the programmer names supported by this CPU."""
         return ['jlink']
-    
+
     def create_programmer(self, programmer):
         """Create and return a programmer instance that will be used to program
         the core.  Must be implemented by subclasses!
@@ -64,11 +62,11 @@ class LPC824(Core):
     def info(self):
         """Display info about the device."""
         deviceid = self.programmer.readmem32(0x400483F8)
-        click.echo('Device ID : {0}'.format(DEVICEID_CHIPNAME_LOOKUP.get(deviceid,
+        print('Device ID : {0}'.format(DEVICEID_CHIPNAME_LOOKUP.get(deviceid,
                                                    '0x{0:08X}'.format(deviceid))))
         # Try to detect the Segger Device ID string and print it if using JLink
         if isinstance(self.programmer, JLink):
             hwid = self.programmer.readmem32(0x400483F8)
             hwstring = DEVICEID_SEGGER_LOOKUP.get(hwid, '0x{0:08X}'.format(hwid))
             if '0x' not in hwstring:
-                click.echo('Segger ID : {0}'.format(hwstring))
+                print('Segger ID : {0}'.format(hwstring))

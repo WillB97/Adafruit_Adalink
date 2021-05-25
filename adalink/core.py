@@ -93,13 +93,13 @@ class Core(click.Command):
             raise AdaLinkError('Only one read memory command can be specified at a time.')
         if read_mem_8 is not None:
             value = programmer.readmem8(read_mem_8)
-            click.echo('0x{0:0X}'.format(value))
+            print('0x{0:0X}'.format(value))
         if read_mem_16 is not None:
             value = programmer.readmem16(read_mem_16)
-            click.echo('0x{0:0X}'.format(value))
+            print('0x{0:0X}'.format(value))
         if read_mem_32 is not None:
             value = programmer.readmem32(read_mem_32)
-            click.echo('0x{0:0X}'.format(value))
+            print('0x{0:0X}'.format(value))
 
     def list_programmers(self):
         """Return a list of the programmer names supported by this CPU.  These

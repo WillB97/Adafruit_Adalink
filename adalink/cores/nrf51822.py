@@ -3,8 +3,6 @@
 # Author: Tony DiCola
 import os
 
-import click
-
 from ..core import Core
 from ..programmers import JLink, STLink, RasPi2
 
@@ -63,7 +61,7 @@ class RasPi2_nRF51822(RasPi2):
         # Program the nRF51822 with the provided hex files.  Note that programming
         # the soft device and bootloader requires erasing the memory so it will
         # always be done.
-        click.echo('WARNING: Flash memory will be erased before programming nRF51822 with the RasPi2!')
+        print('WARNING: Flash memory will be erased before programming nRF51822 with the RasPi2!')
         commands = [
             'init',
             'reset',
@@ -107,7 +105,7 @@ class STLink_nRF51822(STLink):
         # Program the nRF51822 with the provided hex files.  Note that programming
         # the soft device and bootloader requires erasing the memory so it will
         # always be done.
-        click.echo('WARNING: Flash memory will be erased before programming nRF51822 with the STLink!')
+        print('WARNING: Flash memory will be erased before programming nRF51822 with the STLink!')
         commands = [
             'init',
             'reset init',
@@ -181,20 +179,20 @@ class nRF51822(Core):
         # Note for completeness there are also readmem32 and readmem8 functions
         # available to use for reading memory values too.
         hwid = programmer.readmem16(0x1000005C)
-        click.echo('Hardware ID : {0}'.format(MCU_LOOKUP.get(hwid, '0x{0:04X}'.format(hwid))))
+        print('Hardware ID : {0}'.format(MCU_LOOKUP.get(hwid, '0x{0:04X}'.format(hwid))))
         # Try to detect the Segger Device ID string and print it if using JLink
         if isinstance(programmer, JLink):
             hwid = programmer.readmem16(0x1000005C)
             hwstring = SEGGER_LOOKUP.get(hwid, '0x{0:04X}'.format(hwid))
             if '0x' not in hwstring:
-                click.echo('Segger ID   : {0}'.format(hwstring))
+                print('Segger ID   : {0}'.format(hwstring))
         # Get the SD firmware version and print it.
         sdid = programmer.readmem16(0x0000300C)
-        click.echo('SD Version  : {0}'.format(SD_LOOKUP.get(sdid, 'Unknown! (0x{0:04X})'.format(sdid))))
+        print('SD Version  : {0}'.format(SD_LOOKUP.get(sdid, 'Unknown! (0x{0:04X})'.format(sdid))))
         # Get the BLE Address and print it.
         addr_high = (programmer.readmem32(0x100000a8) & 0x0000ffff) | 0x0000c000
         addr_low  = programmer.readmem32(0x100000a4)
-        click.echo('Device Addr : {0:02X}:{1:02X}:{2:02X}:{3:02X}:{4:02X}:{' \
+        print('Device Addr : {0:02X}:{1:02X}:{2:02X}:{3:02X}:{4:02X}:{' \
                    '5:02X}'.format((addr_high >> 8) & 0xFF,
                                    (addr_high) & 0xFF,
                                    (addr_low >> 24) & 0xFF,
@@ -204,4 +202,4 @@ class nRF51822(Core):
         # Get device ID.
         did_high = programmer.readmem32(0x10000060)
         did_low  = programmer.readmem32(0x10000064)
-        click.echo('Device ID   : {0:08X}{1:08X}'.format(did_high, did_low))
+        print('Device ID   : {0:08X}{1:08X}'.format(did_high, did_low))
