@@ -1,105 +1,148 @@
 # Core base class
-import click
+import os
+import functools
+import argparse
 
 from .errors import AdaLinkError
 
+class PathType:
+    "An argparse type to test if files exist"
+    def __init__(self, exists=True):
+        self._exists = exists
+        self._type = type
 
-class HexInt(click.ParamType):
-    """Custom click parameter type for an integer which can be specified as a
-    hex value (starts with 0x...), octal (starts with 0), or decimal value.
-    """
-    name = 'integer (supports hex with 0x)'
+    def __call__(self, string):
+        e = os.path.exists(string)
+        if self._exists==True:
+            if not e:
+                raise argparse.ArgumentTypeError("path does not exist: '{}'".format(string))
 
-    def convert(self, value, param, ctx):
+            if not os.path.isfile(string):
+                raise argparse.ArgumentTypeError("path is not a file: '{}'".format(string))
+        else:
+            p = os.path.dirname(os.path.normpath(string)) or '.'
+
+            if not os.path.exists(p) or not os.path.isdir(p):
+                raise argparse.ArgumentTypeError("parent directory does not exist: '{}'".format(p))
+        return string
+
+
+class ProgramBinArgs(argparse.Action):
+    "Action to process argument pairs as File, int and append them"
+    def __call__(self, parser, namespace, values, option_string=None):
         try:
-            return int(value, 0)
-        except ValueError:
-            self.fail('%s is not a valid integer' % value, param, ctx)
+            items = getattr(namespace, self.dest, None)
+            if items is None:
+                items = []
+            items.append((PathType(exists=True)(values[0]), int(values[1], base=0)))
+            setattr(namespace, self.dest, items)
+        except argparse.ArgumentTypeError as e:  # in actions ArgumentTypeError is not formatted correctly
+            raise argparse.ArgumentError(self, e)
 
-    def __repr__(self):
-        return 'INT'
 
-
-class Core(click.Command):
-
+class Core:
     def __init__(self, name=None):
         # Default to the name of the class if one isn't specified.
         if name is None:
             name = self.__class__.__name__.lower()
         self.name = name
-        # Build the standard list of parameters that a core can take.
-        params = []
-        params.append(click.Option(param_decls=['-p', '--programmer'],
-                                   required=True,
-                                   type=click.Choice(self.list_programmers()),
-                                   help='Programmer type.'))
-        params.append(click.Option(param_decls=['-w', '--wipe'],
-                                   is_flag=True,
-                                   help='Wipe flash memory before programming.'))
-        params.append(click.Option(param_decls=['-i', '--info'],
-                                   is_flag=True,
-                                   help='Display information about the core.'))
-        params.append(click.Option(param_decls=['-h', '--program-hex'],
-                                   multiple=True,
-                                   type=click.Path(exists=True),
-                                   help='Program the specified .hex file. Can be specified multiple times.'))
-        params.append(click.Option(param_decls=['-b', '--program-bin'],
-                                   multiple=True,
-                                   nargs=2,
-                                   type=(click.Path(exists=True), HexInt()),
-                                   metavar='PATH ADDRESS',
-                                   help='Program the specified .bin file at the provided address. Address can be specified in hex, like 0x00FF.  Can be specified multiple times.'))
-        params.append(click.Option(param_decls=['-r8', '--read-mem-8'],
-                                   multiple=False,
-                                   nargs=1,
-                                   type=HexInt(),
-                                   metavar='ADDRESS',
-                                   help='Read 1 byte of memory from the specified address (can be hex, like 0x1234ABCD).'))
-        params.append(click.Option(param_decls=['-r16', '--read-mem-16'],
-                                   multiple=False,
-                                   nargs=1,
-                                   type=HexInt(),
-                                   metavar='ADDRESS',
-                                   help='Read 2 bytes of memory from the specified address (can be hex, like 0x1234ABCD).'))
-        params.append(click.Option(param_decls=['-r32', '--read-mem-32'],
-                                   multiple=False,
-                                   nargs=1,
-                                   type=HexInt(),
-                                   metavar='ADDRESS',
-                                   help='Read 4 bytes of memory from the specified address (can be hex, like 0x1234ABCD).'))
-        super(Core, self).__init__(self.name, params=params, callback=self._callback,
-                                   short_help=self.__doc__, help=self.__doc__)
 
-    def _callback(self, programmer, wipe, info, program_hex, program_bin, read_mem_8, read_mem_16, read_mem_32):
+    def _callback(self, args):
         # Create the programmer that was specified.
-        programmer = self.create_programmer(programmer)
+        programmer = self.create_programmer(args.programmer)
         # Check that programmer is connected to device.
         if not programmer.is_connected():
             raise AdaLinkError('Could not find {0}, is it connected?'.format(self.name))
         # Wipe flash memory if requested.
-        if wipe:
+        if args.wipe:
             programmer.wipe()
         # Program any specified hex/bin files.
-        if len(program_hex) > 0 or len(program_bin) > 0:
-            programmer.program(program_hex, program_bin)
+        if len(args.program_hex) > 0 or len(args.program_bin) > 0:
+            programmer.program(args.program_hex, args.program_bin)
         # Display information if requested.
-        if info:
+        if args.info:
             self.info(programmer)
         # Read and print out memory if requested.
         # First make sure only one read memory command was requested (otherwise
         # it's ambiguous which one to use or the order to return results).
-        f = [x for x in [read_mem_8, read_mem_16, read_mem_32] if x != None]
+        f = [x for x in [args.read_mem_8, args.read_mem_16, args.read_mem_32] if x != None]
         if len(f) > 1:
             raise AdaLinkError('Only one read memory command can be specified at a time.')
-        if read_mem_8 is not None:
-            value = programmer.readmem8(read_mem_8)
+        if args.read_mem_8 is not None:
+            value = programmer.readmem8(args.read_mem_8)
             print('0x{0:0X}'.format(value))
-        if read_mem_16 is not None:
-            value = programmer.readmem16(read_mem_16)
+        if args.read_mem_16 is not None:
+            value = programmer.readmem16(args.read_mem_16)
             print('0x{0:0X}'.format(value))
-        if read_mem_32 is not None:
-            value = programmer.readmem32(read_mem_32)
+        if args.read_mem_32 is not None:
+            value = programmer.readmem32(args.read_mem_32)
             print('0x{0:0X}'.format(value))
+
+    def add_subparser(self, subparsers):
+        "Build the standard list of parameters that a core can take."
+        parser = subparsers.add_parser(
+            self.name,
+            help=self.__doc__,
+            description=self.__doc__,
+            usage='%(prog)s [OPTIONS]',
+            add_help=False,
+        )
+        parser.add_argument(  # Redefine help to free up -h
+            '--help',
+            action='help',
+            help='show this help message and exit'
+        )
+        parser.add_argument(
+            '-p', '--programmer',
+            required=True,
+            choices=self.list_programmers(),
+            help='Programmer type.',
+        )
+        parser.add_argument(
+            '-w', '--wipe',
+            help='Wipe flash memory before programming.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '-i', '--info',
+            help='Display information about the core.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '-h', '--program-hex',
+            action='append',
+            type=PathType(exists=True),
+            help='Program the specified .hex file. Can be specified multiple times.',
+        )
+        parser.add_argument(
+            '-b', '--program-bin',
+            nargs=2,
+            metavar=('PATH', 'ADDRESS'),
+            action=ProgramBinArgs,
+            help=(
+                'Program the specified .bin file at the provided address. '
+                'Address can be specified in hex, like 0x00FF.  Can be specified multiple times.'
+            ),
+        )
+        parser.add_argument(
+            '-r8', '--read-mem-8',
+            type=functools.partial(int, base=0),
+            metavar='ADDRESS',
+            help='Read 1 byte of memory from the specified address (can be hex, like 0x1234ABCD).',
+        )
+        parser.add_argument(
+            '-r16', '--read-mem-16',
+            type=functools.partial(int, base=0),
+            metavar='ADDRESS',
+            help='Read 2 bytes of memory from the specified address (can be hex, like 0x1234ABCD).',
+        )
+        parser.add_argument(
+            '-r32', '--read-mem-32',
+            type=functools.partial(int, base=0),
+            metavar='ADDRESS',
+            help='Read 4 bytes of memory from the specified address (can be hex, like 0x1234ABCD).',
+        )
+        parser.set_defaults(func=self._callback)
 
     def list_programmers(self):
         """Return a list of the programmer names supported by this CPU.  These

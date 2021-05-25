@@ -1,19 +1,17 @@
 import logging
 import os
 import platform
-
-import click
+import argparse
 
 from . import __version__
 from .core import Core
+from .errors import AdaLinkError
+
+# Import all the cores. MUST be a * reference to ensure all the cores are dynamically loaded.
+from .cores import *
 
 
-@click.group(subcommand_metavar='CORE')
-@click.option('-v', '--verbose', is_flag=True,
-              help='Display verbose output like raw programmer commands.')
-@click.version_option(version=__version__)
-@click.pass_context
-def main(ctx, verbose):
+def main():
     """AdaLink ARM CPU Programmer.
 
     AdaLink can program different ARM CPUs using programming hardware such as
@@ -31,19 +29,35 @@ def main(ctx, verbose):
     #   http://apple.stackexchange.com/questions/153402/in-osx-yosemite-why-can-i-set-many-environment-variables-for-gui-apps-but-cann
     if platform.system() == 'Darwin':
         os.environ["PATH"] = os.environ["PATH"] + ':/usr/local/bin'
-    # Initialize context as empty dict to store data sent from core to commands.
-    ctx.obj = {}
+
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Display verbose output like raw programmer commands.',
+    )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=__version__,
+    )
+
+    subparsers = parser.add_subparsers(title="Cores", metavar='CORE')
+
+    for core in Core.__subclasses__():
+        core().add_subparser(subparsers)
+
+    args = parser.parse_args()
+
     # Enable verbose debug output if required.
-    if verbose:
+    if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-
-# Import all the cores.  Must be done after the main function above or else
-# there will be a circular reference.  Also MUST be a * reference to ensure all
-# the cores are dynamically loaded.
-from .cores import *
-for core in Core.__subclasses__():
-    main.add_command(core())
+    if 'func' in args:
+        args.func(args)
+    else:
+        parser.print_help()
 
 
 if __name__ == '__main__':
