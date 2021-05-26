@@ -122,6 +122,23 @@ class RasPi2_ATSAMD21G18(RasPi2):
         if verified != (len(hex_files) + len(bin_files)):
             raise AdaLinkError('Failed to verify all files were programmed!')
 
+# DEVICE SELECTION register value to name mapping
+DEVSEL_CHIPNAME_LOOKUP = {
+    0x0: 'SAMD21J18A',
+    0x1: 'SAMD21J17A',
+    0x2: 'SAMD21J16A',
+    0x3: 'SAMD21J15A',
+
+    0x5: 'SAMD21G18A',
+    0x6: 'SAMD21G17A',
+    0x7: 'SAMD21G16A',
+    0x8: 'SAMD21G15A',
+
+    0xA: 'SAMD21E18A',
+    0xB: 'SAMD21E17A',
+    0xC: 'SAMD21E16A',
+    0xD: 'SAMD21E15A',
+}
 
 class ATSAMD21G18(Core):
     """Atmel ATSAMD21G18 CPU."""
@@ -149,4 +166,15 @@ class ATSAMD21G18(Core):
 
     def info(self, programmer):
         """Display info about the device."""
-        print('Not implemented!')
+        print('Serial No.: {0:04X}:{1:04X}:{2:04X}:{3:04X}:{4:04X}:{5:04X}:{6:04X}:{7:04X}'.format(
+            programmer.readmem16(0x0080A00E),
+            programmer.readmem16(0x0080A00C),
+            programmer.readmem16(0x0080A042),
+            programmer.readmem16(0x0080A040),
+            programmer.readmem16(0x0080A046),
+            programmer.readmem16(0x0080A044),
+            programmer.readmem16(0x0080A04A),
+            programmer.readmem16(0x0080A048),
+        ))
+        print('Device ID : {0}'.format(DEVSEL_CHIPNAME_LOOKUP.get(
+                programmer.readmem8(0x41002018), 'Reserved')))
