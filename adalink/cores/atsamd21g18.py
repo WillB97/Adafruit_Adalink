@@ -9,6 +9,24 @@ from ..core import Core
 from ..errors import AdaLinkError
 from ..programmers import JLink, STLink, RasPi2
 
+# DEVICE SELECTION register value to name mapping
+DEVSEL_CHIPNAME_LOOKUP = {
+    0x0: 'SAMD21J18A',
+    0x1: 'SAMD21J17A',
+    0x2: 'SAMD21J16A',
+    0x3: 'SAMD21J15A',
+
+    0x5: 'SAMD21G18A',
+    0x6: 'SAMD21G17A',
+    0x7: 'SAMD21G16A',
+    0x8: 'SAMD21G15A',
+
+    0xA: 'SAMD21E18A',
+    0xB: 'SAMD21E17A',
+    0xC: 'SAMD21E16A',
+    0xD: 'SAMD21E15A',
+}
+
 
 class STLink_ATSAMD21G18(STLink):
     # ATSAMD21G18-specific STLink-based programmer.  Required to add custom
@@ -121,24 +139,6 @@ class RasPi2_ATSAMD21G18(RasPi2):
         verified = len(filter(lambda x: x.startswith('verified '), output.splitlines()))
         if verified != (len(hex_files) + len(bin_files)):
             raise AdaLinkError('Failed to verify all files were programmed!')
-
-# DEVICE SELECTION register value to name mapping
-DEVSEL_CHIPNAME_LOOKUP = {
-    0x0: 'SAMD21J18A',
-    0x1: 'SAMD21J17A',
-    0x2: 'SAMD21J16A',
-    0x3: 'SAMD21J15A',
-
-    0x5: 'SAMD21G18A',
-    0x6: 'SAMD21G17A',
-    0x7: 'SAMD21G16A',
-    0x8: 'SAMD21G15A',
-
-    0xA: 'SAMD21E18A',
-    0xB: 'SAMD21E17A',
-    0xC: 'SAMD21E16A',
-    0xD: 'SAMD21E15A',
-}
 
 class ATSAMD21G18(Core):
     """Atmel ATSAMD21G18 CPU."""
