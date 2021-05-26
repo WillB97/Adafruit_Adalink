@@ -1,4 +1,4 @@
-# Atmel ATSAMD21G18 core implementation.
+# Atmel SAMD21 core implementation.
 # See chip summary at:
 #   http://www.atmel.com/Images/Atmel-42181-SAM-D21_Summary.pdf
 #
@@ -28,18 +28,18 @@ DEVSEL_CHIPNAME_LOOKUP = {
 }
 
 
-class STLink_ATSAMD21G18(STLink):
-    # ATSAMD21G18-specific STLink-based programmer.  Required to add custom
+class STLink_SAMD21(STLink):
+    # SAMD21-specific STLink-based programmer.  Required to add custom
     # wipe function, and to use the load_image command for programming (the
     # flash write_image function doesn't seem to work because of OpenOCD bugs).
 
     def __init__(self):
-        # Call base STLink initializer and set it up to program the ATSAMD21G18.
-        super(STLink_ATSAMD21G18, self).__init__(params='-f interface/stlink-v2.cfg ' \
+        # Call base STLink initializer and set it up to program the SAMD21.
+        super(STLink_SAMD21, self).__init__(params='-f interface/stlink-v2.cfg ' \
             '-c "set CHIPNAME at91samd21g18; set ENDIAN little; set CPUTAPID 0x0bc11477; source [find target/at91samdXX.cfg]"')
 
     def wipe(self):
-        # Run OpenOCD command to wipe ATSAMD21G18 memory.
+        # Run OpenOCD command to wipe SAMD21 memory.
         commands = [
             'init',
             'reset init',
@@ -49,7 +49,7 @@ class STLink_ATSAMD21G18(STLink):
         self.run_commands(commands)
 
     def program(self, hex_files=[], bin_files=[]):
-        # Program the ATSAMD21G18 with the provided hex/bin files.
+        # Program the SAMD21 with the provided hex/bin files.
         print('WARNING: Make sure the provided hex/bin files are padded with ' \
             'at least 64 bytes of blank (0xFF) data!  This will work around a cache bug with OpenOCD 0.9.0.')
         commands = [
@@ -84,18 +84,18 @@ class STLink_ATSAMD21G18(STLink):
         if verified != (len(hex_files) + len(bin_files)):
             raise AdaLinkError('Failed to verify all files were programmed!')
 
-class RasPi2_ATSAMD21G18(RasPi2):
-    # ATSAMD21G18-specific Raspi2 native-based programmer.  Required to add custom
+class RasPi2_SAMD21(RasPi2):
+    # SAMD21-specific Raspi2 native-based programmer.  Required to add custom
     # wipe function, and to use the load_image command for programming (the
     # flash write_image function doesn't seem to work because of OpenOCD bugs).
 
     def __init__(self):
-        # Call base Raspi initializer and set it up to program the ATSAMD21G18.
-        super(RasPi2_ATSAMD21G18, self).__init__(params='-f interface/raspberrypi2-native.cfg ' \
+        # Call base Raspi initializer and set it up to program the SAMD21.
+        super(RasPi2_SAMD21, self).__init__(params='-f interface/raspberrypi2-native.cfg ' \
             '-c "transport select swd; set CHIPNAME at91samd21g18; adapter_nsrst_delay 100; adapter_nsrst_assert_width 100; source [find target/at91samdXX.cfg]"')
 
     def wipe(self):
-        # Run OpenOCD command to wipe ATSAMD21G18 memory.
+        # Run OpenOCD command to wipe SAMD21 memory.
         commands = [
             'init',
             'reset init',
@@ -105,7 +105,7 @@ class RasPi2_ATSAMD21G18(RasPi2):
         self.run_commands(commands)
 
     def program(self, hex_files=[], bin_files=[]):
-        # Program the ATSAMD21G18 with the provided hex/bin files.
+        # Program the SAMD21 with the provided hex/bin files.
         print('WARNING: Make sure the provided hex/bin files are padded with ' \
             'at least 64 bytes of blank (0xFF) data!  This will work around a cache bug with OpenOCD 0.9.0.')
         commands = [
@@ -140,13 +140,13 @@ class RasPi2_ATSAMD21G18(RasPi2):
         if verified != (len(hex_files) + len(bin_files)):
             raise AdaLinkError('Failed to verify all files were programmed!')
 
-class ATSAMD21G18(Core):
-    """Atmel ATSAMD21G18 CPU."""
+class SAMD21(Core):
+    """Atmel SAMD21 CPU."""
     # Note that the docstring will be used as the short help description.
 
     def __init__(self):
         # Call base class constructor--MUST be done!
-        super(ATSAMD21G18, self).__init__()
+        super(SAMD21, self).__init__()
 
     def list_programmers(self):
         """Return a list of the programmer names supported by this CPU."""
@@ -160,9 +160,9 @@ class ATSAMD21G18(Core):
             return JLink('Cortex-M0 r0p1, Little endian',
                          params='-device ATSAMD21G18 -if swd -speed 1000')
         elif programmer == 'stlink':
-            return STLink_ATSAMD21G18()
+            return STLink_SAMD21()
         elif programmer == 'raspi2':
-            return RasPi2_ATSAMD21G18()
+            return RasPi2_SAMD21()
 
     def info(self, programmer):
         """Display info about the device."""
