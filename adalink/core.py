@@ -143,6 +143,7 @@ class Core:
             help='Read 4 bytes of memory from the specified address (can be hex, like 0x1234ABCD).',
         )
         parser.set_defaults(func=self._callback)
+        return parser
 
     def list_programmers(self):
         """Return a list of the programmer names supported by this CPU.  These

@@ -27,16 +27,35 @@ DEVSEL_CHIPNAME_LOOKUP = {
     0xD: 'SAMD21E15A',
 }
 
+VARIANT_LOOKUP = {
+    'samd21e15': ('atsamd21e15', 'at91samd21e15'),
+    'samd21e16': ('atsamd21e16', 'at91samd21e16'),
+    'samd21e17': ('atsamd21e17', 'at91samd21e17'),
+    'samd21e18': ('atsamd21e18', 'at91samd21e18'),
+
+    'samd21g15': ('atsamd21g15', 'at91samd21g15'),
+    'samd21g16': ('atsamd21g16', 'at91samd21g16'),
+    'samd21g17': ('atsamd21g17', 'at91samd21g17'),
+    'samd21g18': ('atsamd21g18', 'at91samd21g18'),
+
+    'samd21j15': ('atsamd21j15', 'at91samd21j15'),
+    'samd21j16': ('atsamd21j16', 'at91samd21j16'),
+    'samd21j17': ('atsamd21j17', 'at91samd21j17'),
+    'samd21j18': ('atsamd21j18', 'at91samd21j18'),
+}
+
 
 class STLink_SAMD21(STLink):
     # SAMD21-specific STLink-based programmer.  Required to add custom
     # wipe function, and to use the load_image command for programming (the
     # flash write_image function doesn't seem to work because of OpenOCD bugs).
 
-    def __init__(self):
+    def __init__(self, chipname='at91samd21g18'):
         # Call base STLink initializer and set it up to program the SAMD21.
-        super(STLink_SAMD21, self).__init__(params='-f interface/stlink-v2.cfg ' \
-            '-c "set CHIPNAME at91samd21g18; set ENDIAN little; set CPUTAPID 0x0bc11477; source [find target/at91samdXX.cfg]"')
+        super(STLink_SAMD21, self).__init__(params=(
+            '-f interface/stlink-v2.cfg '
+            '-c "set CHIPNAME {}; set ENDIAN little; set CPUTAPID 0x0bc11477; source [find target/at91samdXX.cfg]"'
+        ).format(chipname))
 
     def wipe(self):
         # Run OpenOCD command to wipe SAMD21 memory.
@@ -89,10 +108,13 @@ class RasPi2_SAMD21(RasPi2):
     # wipe function, and to use the load_image command for programming (the
     # flash write_image function doesn't seem to work because of OpenOCD bugs).
 
-    def __init__(self):
+    def __init__(self, chipname='at91samd21g18'):
         # Call base Raspi initializer and set it up to program the SAMD21.
-        super(RasPi2_SAMD21, self).__init__(params='-f interface/raspberrypi2-native.cfg ' \
-            '-c "transport select swd; set CHIPNAME at91samd21g18; adapter_nsrst_delay 100; adapter_nsrst_assert_width 100; source [find target/at91samdXX.cfg]"')
+        super(RasPi2_SAMD21, self).__init__(params=(
+            '-f interface/raspberrypi2-native.cfg '
+            '-c "transport select swd; set CHIPNAME {}; adapter_nsrst_delay 100; '
+            'adapter_nsrst_assert_width 100; source [find target/at91samdXX.cfg]"'
+        ).format(chipname))
 
     def wipe(self):
         # Run OpenOCD command to wipe SAMD21 memory.
@@ -157,12 +179,32 @@ class SAMD21(Core):
         the core.  Must be implemented by subclasses!
         """
         if programmer == 'jlink':
-            return JLink('Cortex-M0 r0p1, Little endian',
-                         params='-device ATSAMD21G18 -if swd -speed 1000')
+            return JLink(
+                'Cortex-M0 r0p1, Little endian',
+                params='-device {} -if swd -speed 1000'.format(
+                    VARIANT_LOOKUP.get(self.variant, ('ATSAMD21G18',))[0]
+                )
+            )
         elif programmer == 'stlink':
-            return STLink_SAMD21()
+            return STLink_SAMD21(VARIANT_LOOKUP.get(self.variant, ('', 'at91samd21g18'))[1])
         elif programmer == 'raspi2':
-            return RasPi2_SAMD21()
+            return RasPi2_SAMD21(VARIANT_LOOKUP.get(self.variant, ('', 'at91samd21g18'))[1])
+
+    def add_subparser(self, subparsers):
+        "Add the variant option to the bottom of the standard list of options"
+        parser = super().add_subparser(subparsers)
+        parser.add_argument(
+            '-V', '--variant',
+            help='Set the particular chip variant being used (default is samd21g18)',
+            choices=VARIANT_LOOKUP.keys(),
+            default='samd21g18',
+            metavar='VARIANT',
+        )
+
+    def _callback(self, args):
+        "Capture the value of the variant argument for use in create_programmer"
+        self.variant = args.variant
+        super()._callback(args)
 
     def info(self, programmer):
         """Display info about the device."""
