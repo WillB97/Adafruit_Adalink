@@ -153,6 +153,19 @@ class JLink(Programmer):
     def is_connected(self):
         """Return true if the device is connected to the programmer."""
         output = self.run_commands(['connect', 'q'])
+
+        if 'FAILED' in output:
+            raise AdaLinkError('Could not find a JLink programmer, is it connected?')
+
+        voltage_match = re.search(r'VTref=([0-9.]+)V', output)
+        if not voltage_match:
+            raise AdaLinkError('JLink output lacks voltage information')
+        ref_voltage = voltage_match.group(1)
+
+        logger.info('VTref={}V'.format(ref_voltage))
+        if float(ref_voltage) < 1:
+            raise AdaLinkError('JLink reference voltage is {}V, it the chip powered?'.format(ref_voltage))
+
         findstr = 'Found {0}'.format(self._connected)
         return output.find(findstr) != -1
 
