@@ -52,10 +52,6 @@ the command.
 Note that you will still need JLink and/or OpenOCD executables in your path--see
 the Install JLink and Install OpenOCD sections above.
 
-In addition you might need to manually install the [click](http://click.pocoo.org/5/)
-module.  Using pip run `sudo pip install click` (omit sudo on Windows) to install this
-module, then try running adalink as describe above.
-
 ### Install from Source
 
 On Linux and MacOS run:
@@ -237,7 +233,7 @@ Zadig tool to install a libusb driver for the STLink device.
 ## Extending AdaLink
 
 adalink is built with a modular structure in mind and can be extended to support
-new CPUs and programmer types without much effort.  
+new CPUs and programmer types without much effort.
 
 ### Adding new CPU cores
 
