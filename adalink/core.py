@@ -57,8 +57,11 @@ class Core:
         if args.wipe:
             programmer.wipe()
         # Program any specified hex/bin files.
-        if args.program_hex is not None or args.program_bin is not None:
-            programmer.program(args.program_hex, args.program_bin)
+        program_hex = [] if args.program_hex is None else args.program_hex
+        program_bin = [] if args.program_bin is None else args.program_bin
+
+        if len(program_hex) > 0 or len(program_bin) > 0:
+            programmer.program(program_hex, program_bin)
         # Display information if requested.
         if args.info:
             self.info(programmer)
