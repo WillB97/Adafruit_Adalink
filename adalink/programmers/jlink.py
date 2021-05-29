@@ -67,7 +67,7 @@ class JLink(Programmer):
         self._jlink_path = os.path.join(jlink_path, jlink_exe)
         logger.info('Using path to JLinkExe: {0}'.format(self._jlink_path))
         # Apply command line parameters if specified.
-        self._jlink_params = []
+        self._jlink_params = ['-NoGui', '1']
         if params is not None:
             self._jlink_params.extend(params.split())
             logger.info('Using parameters to JLinkExe: {0}'.format(params))
