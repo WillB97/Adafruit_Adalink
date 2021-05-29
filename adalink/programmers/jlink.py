@@ -78,7 +78,10 @@ class JLink(Programmer):
         """Checks if JLinkExe is found in the system path or not."""
         # Spawn JLinkExe process and capture its output.
         args = [self._jlink_path]
-        args.append('?')
+        script_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        script_file.write('q')
+        script_file.close()
+        args.append(script_file.name)
         try:
             process = subprocess.Popen(args, stdout=subprocess.PIPE)
             process.wait()
