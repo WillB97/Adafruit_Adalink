@@ -16,7 +16,6 @@ import re
 import sys
 import subprocess
 import tempfile
-import threading
 import time
 
 from .base import Programmer
@@ -100,21 +99,13 @@ class JLink(Programmer):
         args.extend(self._jlink_params)
         args.append(filename)
         process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if timeout_sec is not None:
-            # Use a timer to stop the subprocess if the timeout is exceeded.
-            # This helps prevent very subtle issues with deadlocks on reading
-            # subprocess output.  See: http://stackoverflow.com/a/10012262
-            def timeout_exceeded(p):
-                # Stop the subprocess and kill the whole program.
-                p.kill()
-                raise AdaLinkError('JLink process exceeded timeout!')
-            timeout = threading.Timer(timeout_sec, timeout_exceeded, [process])
-            timeout.start()
+
         # Grab output of JLink.
-        output, err = process.communicate()
-        if timeout_sec is not None:
-            # Stop timeout timer when communicate call returns.
-            timeout.cancel()
+        try:
+            output, err = process.communicate(timeout=timeout_sec)
+        except TimeoutError:
+            raise AdaLinkError('JLink process exceeded timeout!')
+
         logger.debug('JLink response: {0}'.format(output.decode('utf-8')))
         return output.decode('utf-8')
 
