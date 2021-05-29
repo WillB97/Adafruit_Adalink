@@ -112,7 +112,7 @@ class JLink(Programmer):
         if timeout_sec is not None:
             # Stop timeout timer when communicate call returns.
             timeout.cancel()
-        logger.debug('JLink response: {0}'.format(output))
+        logger.debug('JLink response: {0}'.format(output.decode('utf-8')))
         return output.decode('utf-8')
 
     def run_commands(self, commands, timeout_sec=60):
